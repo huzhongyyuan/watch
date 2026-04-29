@@ -1,0 +1,62 @@
+defaults:
+  - _self_
+  - model: watch/watch_pl_demo
+  - network: watch/relative_transformer
+  - endecoder: watch/v3_1_amass_human_bedlam_cam
+
+pipeline_watch:
+  _target_: core.model.watch.pipeline.watch_pipeline.Pipeline
+  args_denoiser3d: ${network}
+  args:
+    endecoder_opt: ${endecoder}
+    normalize_cam_angvel: True
+    weights: null
+    static_conf: null
+
+#ckpt_path: inputs/checkpoints/watch/v2_2-e429-s162110.ckpt
+#ckpt_path: inputs/checkpoints/watch/v2_3-e399-s150800.ckpt
+#ckpt_path: inputs/checkpoints/watch/v2_4-e109-s069850.ckpt
+#ckpt_path: inputs/checkpoints/watch/v2_4-e349-s222250.ckpt
+#ckpt_path: inputs/checkpoints/watch/v2_6-e359-s135720.ckpt
+#ckpt_path: inputs/checkpoints/watch/v2_6-e399-s150800.ckpt
+#ckpt_path: inputs/checkpoints/watch/v3_1-e389-s147030.ckpt
+# ckpt_path: inputs/checkpoints/watch/v3_1-e419-s158340.ckpt
+#ckpt_path: inputs/checkpoints/watch/v3_2-e419-s158340.ckpt
+#ckpt_path: inputs/checkpoints/watch/v3_9-e089-s057150.ckpt
+#ckpt_path: inputs/checkpoints/watch/v3_9-e459-s292100.ckpt
+# ckpt_path: outputs/watch_mixed_v8/mixedtrain_v6/checkpoints/e499-s020500.ckpt
+# ckpt_path: outputs/watch_mixed_v8/mixedtrain_v11/checkpoints/e159-s013120.ckpt
+ckpt_path: outputs/watch_mixed_v8/mixedtrain_v11/checkpoints/e489-s040180.ckpt
+# ckpt_path: outputs/watch_mixed_v8/mixedtrain_v6/checkpoints/e049-s002050.ckpt
+
+# ================================ #
+#          global setting          #
+# ================================ #
+
+video_name: ???
+output_root: outputs/demo_watch
+output_dir: "${output_root}/${video_name}"
+preprocess_dir: ${output_dir}/preprocess
+video_path: "${output_dir}/0_input_video.mp4"
+
+# SAM 3D Body model configuration
+sam3db_checkpoint_path: inputs/checkpoints/sam3d/model.ckpt
+sam3db_mhr_path: inputs/checkpoints/sam3d/assets/mhr_model.pt
+
+# Options
+static_cam: False
+verbose: False
+use_dpvo: False
+f_mm: null  # focal length of fullframe camera in mm
+
+paths:
+  bbx: ${preprocess_dir}/bbx.pt
+  bbx_xyxy_video_overlay: ${preprocess_dir}/bbx_xyxy_video_overlay.mp4
+  vit_features: ${preprocess_dir}/vit_features.pt
+  vitpose: ${preprocess_dir}/vitpose.pt
+  vitpose_video_overlay: ${preprocess_dir}/vitpose_video_overlay.mp4
+  hmr4d_results: ${output_dir}/hmr4d_results.pt
+  incam_video: ${output_dir}/1_incam.mp4
+  global_video: ${output_dir}/2_global.mp4
+  incam_global_horiz_video: ${output_dir}/${video_name}_3_incam_global_horiz.mp4
+  slam: ${preprocess_dir}/slam_results.pt

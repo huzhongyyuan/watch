@@ -1,0 +1,68 @@
+# @package _global_
+# v11_4: Enable geometric consistency loss (transl_infer_human_cam=0.1)
+# This forces the network to learn that human+camera translation are geometrically consistent
+defaults:
+    - override /data: mocap/trainX_testY
+    - override /model: watch/watch_pl
+    - override /endecoder: watch/v3_1_amass_human_bedlam_cam
+    - override /optimizer: adamw_1e-4
+    - override /scheduler_cfg: epoch_half_200_350
+    - override /train_datasets:
+          - pure_motion_amass/v11
+          - imgfeat_bedlam/v2
+          - imgfeat_h36m/v1
+    - override /test_datasets:
+          - emdb1/v1_fliptest
+          - emdb2/v1_fliptest
+    - override /callbacks:
+          - simple_ckpt_saver/every5e_top100
+          - prog_bar/prog_reporter_every0.1
+          - train_speed_timer/base
+          - lr_monitor/pl
+          - metric_emdb1
+          - metric_emdb2
+    - override /network: watch/relative_transformer
+
+exp_name_base: mixed
+exp_name_var: "train_v11_4_geom_loss"
+exp_name: ${exp_name_base}${exp_name_var}
+data_name: watch_mixed_v11_geom
+
+pipeline_watch:
+    _target_: core.model.watch.pipeline.watch_pipeline.Pipeline
+    args_denoiser3d: ${network}
+    args:
+        endecoder_opt: ${endecoder}
+        normalize_cam_angvel: True
+        weights:
+            cr_j3d: 500.
+            transl_c: 1.
+            cr_verts: 500.
+            j2d: 1000.
+            verts2d: 1000.
+            transl_w_human: 1.
+            transl_w_cam: 1.
+            transl_infer_human_cam: 0.1   # KEY: geometric consistency loss enabled
+            static_conf_bce: 1.
+        static_conf:
+            vel_thr: 0.15
+
+data:
+    loader_opts:
+        train:
+            batch_size: 32
+            num_workers: 4
+
+pl_trainer:
+    precision: 16-mixed
+    log_every_n_steps: 50
+    gradient_clip_val: 0.5
+    max_epochs: 50
+    check_val_every_n_epoch: 5
+    devices: 1
+
+logger:
+    _target_: pytorch_lightning.loggers.TensorBoardLogger
+    save_dir: ${output_dir}
+    name: ""
+    version: "tb"
